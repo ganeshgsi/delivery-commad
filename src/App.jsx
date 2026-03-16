@@ -61,7 +61,12 @@ const MONTHS = [
   "Nov 2026",
   "Dec 2026",
 ];
-const SHARED_PASSWORD = "CDO_GATEKEEPER_2025";
+const SHARED_PASSWORDS = (() => {
+  const raw = import.meta.env.VITE_SHARED_PASSWORD ?? "CDO_GATEKEEPER_2025";
+  if (typeof raw !== "string") return ["CDO_GATEKEEPER_2025"];
+  const list = raw.split(",").map((p) => p.trim()).filter(Boolean);
+  return list.length > 0 ? list : ["CDO_GATEKEEPER_2025"];
+})();
 
 const KRA_METRICS = [
   {
@@ -286,7 +291,7 @@ export default function App() {
 
   const handleLogin = (e) => {
     e.preventDefault();
-    if (passwordInput === SHARED_PASSWORD) {
+    if (SHARED_PASSWORDS.includes(passwordInput)) {
       setIsAuthorized(true);
       setLoginError("");
     } else {
