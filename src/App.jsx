@@ -189,43 +189,59 @@ export default function App() {
     setIsUploading(true);
     const reader = new FileReader();
     reader.onload = async (event) => {
-      const text = typeof event.target?.result === 'string' ? event.target.result : '';
-      const rows = text
-        .split('\n')
-        .map(r => r.split(',').map(c => c.trim()))
-        .filter(r => r.length >= 6);
+      try {
+        const text = typeof event.target?.result === 'string' ? event.target.result : '';
+        const rows = text
+          .split('\n')
+          .map(r => r.split(',').map(c => c.trim()))
+          .filter(r => r.length >= 6);
 
-      const quarterMap = new Map();
-      for (let i = 1; i < rows.length; i += 1) {
-        const [name, bu, margin, otd, obd, csat] = rows[i];
-        if (!name || !BUSINESS_UNITS.includes(bu)) continue;
-        if (!quarterMap.has(name)) {
-          quarterMap.set(name, {
-            name,
-            quarter: selectedQuarter,
-            activeBUs: [],
-            buData: {}
-          });
+        const quarterMap = new Map();
+        for (let i = 1; i < rows.length; i += 1) {
+          const [name, bu, margin, otd, obd, csat] = rows[i];
+          if (!name || !BUSINESS_UNITS.includes(bu)) continue;
+          if (!quarterMap.has(name)) {
+            quarterMap.set(name, {
+              name,
+              quarter: selectedQuarter,
+              activeBUs: [],
+              buData: {}
+            });
+          }
+          const client = quarterMap.get(name);
+          if (!client.activeBUs.includes(bu)) client.activeBUs.push(bu);
+          client.buData[bu] = {
+            margin: Number.parseFloat(margin) || 0,
+            otd: Math.round((Number.parseFloat(otd) || 0) / 5) * 5,
+            obd: Math.round((Number.parseFloat(obd) || 0) / 5) * 5,
+            csat: Number.parseFloat(csat) || 0,
+            techDebt: 0,
+            aiFirst: 0
+          };
         }
-        const client = quarterMap.get(name);
-        if (!client.activeBUs.includes(bu)) client.activeBUs.push(bu);
-        client.buData[bu] = {
-          margin: Number.parseFloat(margin) || 0,
-          otd: Math.round((Number.parseFloat(otd) || 0) / 5) * 5,
-          obd: Math.round((Number.parseFloat(obd) || 0) / 5) * 5,
-          csat: Number.parseFloat(csat) || 0,
-          techDebt: 0,
-          aiFirst: 0
-        };
-      }
 
-      // Persist all clients
-      for (const client of quarterMap.values()) {
-        // eslint-disable-next-line no-await-in-loop
-        await saveClient(client);
+        const clients = Array.from(quarterMap.values());
+        const results = await Promise.allSettled(
+          clients.map((client) =>
+            saveClient(client).catch((err) => {
+              console.error('saveClient failed for', client.name, err);
+              throw err;
+            })
+          )
+        );
+
+        const failed = results.filter((r) => r.status === 'rejected');
+        if (failed.length > 0) {
+          console.error('Some rows failed to sync:', failed);
+          alert(`Some rows failed to sync (${failed.length}). Check console for details.`);
+        }
+      } catch (err) {
+        console.error('CSV upload failed:', err);
+        alert('Upload failed while syncing data. Check console for details.');
+      } finally {
+        setIsUploading(false);
+        if (e.target) e.target.value = null;
       }
-      setIsUploading(false);
-      e.target.value = null;
     };
     reader.readAsText(file);
   };
