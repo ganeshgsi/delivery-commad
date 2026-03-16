@@ -1,12 +1,12 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { 
-  Clock, 
-  DollarSign, 
-  Smile, 
-  ShieldAlert, 
-  Cpu, 
-  Plus, 
-  LayoutDashboard, 
+import React, { useState, useMemo, useEffect } from "react";
+import {
+  Clock,
+  DollarSign,
+  Smile,
+  ShieldAlert,
+  Cpu,
+  Plus,
+  LayoutDashboard,
   Users,
   ChevronRight,
   ChevronDown,
@@ -24,24 +24,101 @@ import {
   UploadCloud,
   Calendar,
   AlertTriangle,
-  LogOut
-} from 'lucide-react';
-import { initializeApp } from 'firebase/app';
-import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
-import { getFirestore, doc, setDoc, onSnapshot, collection, deleteDoc, query } from 'firebase/firestore';
+  LogOut,
+  Download,
+} from "lucide-react";
+import { initializeApp } from "firebase/app";
+import {
+  getAuth,
+  signInAnonymously,
+  signInWithCustomToken,
+  onAuthStateChanged,
+} from "firebase/auth";
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  getDoc,
+  getDocFromCache,
+  onSnapshot,
+  collection,
+  deleteDoc,
+  query,
+} from "firebase/firestore";
 
 // Configuration constants
 const BUSINESS_UNITS = ["Web & Mobile", "Gaming", "Data", "Video Tech"];
-const QUARTERS = ["Q1 2024", "Q2 2024", "Q3 2024", "Q4 2024", "Q1 2025"];
-const SHARED_PASSWORD = "CDO_GATEKEEPER_2025"; 
+const MONTHS = [
+  "Feb 2026",
+  "Mar 2026",
+  "Apr 2026",
+  "May 2026",
+  "Jun 2026",
+  "Jul 2026",
+  "Aug 2026",
+  "Sep 2026",
+  "Oct 2026",
+  "Nov 2026",
+  "Dec 2026",
+];
+const SHARED_PASSWORD = "CDO_GATEKEEPER_2025";
 
 const KRA_METRICS = [
-  { id: 'margin', label: 'Contribution Margin', icon: DollarSign, suffix: '%', min: 0, max: 100, step: "1" },
-  { id: 'otd', label: 'On-Time Delivery', icon: Clock, suffix: '%', min: 0, max: 100, step: "5" },
-  { id: 'obd', label: 'On-Budget Delivery', icon: DollarSign, suffix: '%', min: 0, max: 100, step: "5" },
-  { id: 'csat', label: 'CSAT Score', icon: Smile, suffix: '/5', min: 1, max: 5, step: "0.1" },
-  { id: 'techDebt', label: 'Tech Debt Index', icon: ShieldAlert, suffix: '%', min: 0, max: 100, inverse: true, step: "5" },
-  { id: 'aiFirst', label: 'AI First Dev %', icon: Cpu, suffix: '%', min: 0, max: 100, step: "5" },
+  {
+    id: "margin",
+    label: "Contribution Margin",
+    icon: DollarSign,
+    suffix: "%",
+    min: 0,
+    max: 100,
+    step: "1",
+  },
+  {
+    id: "otd",
+    label: "On-Time Delivery",
+    icon: Clock,
+    suffix: "%",
+    min: 0,
+    max: 100,
+    step: "5",
+  },
+  {
+    id: "obd",
+    label: "On-Budget Delivery",
+    icon: DollarSign,
+    suffix: "%",
+    min: 0,
+    max: 100,
+    step: "5",
+  },
+  {
+    id: "csat",
+    label: "CSAT Score",
+    icon: Smile,
+    suffix: "/5",
+    min: 1,
+    max: 5,
+    step: "0.1",
+  },
+  {
+    id: "techDebt",
+    label: "Tech Debt Index",
+    icon: ShieldAlert,
+    suffix: "%",
+    min: 0,
+    max: 100,
+    inverse: true,
+    step: "5",
+  },
+  {
+    id: "aiFirst",
+    label: "AI First Dev %",
+    icon: Cpu,
+    suffix: "%",
+    min: 0,
+    max: 100,
+    step: "5",
+  },
 ];
 
 const GOVERNANCE_RULES = {
@@ -49,14 +126,14 @@ const GOVERNANCE_RULES = {
     "Use the official CSV template for all uploads.",
     "Input hard data verified by Jira or SonarQube.",
     "Report Tech Debt honestly—transparency is the only way to get budget for refactoring.",
-    "Ensure Business Unit names match exactly ('Web & Mobile', etc.)."
+    "Ensure Business Unit names match exactly ('Web & Mobile', etc.).",
   ],
   donts: [
     "Don't use the legacy 1-10 CSAT scale; 1-5 is the mandatory standard.",
     "Don't round numbers manually; the system enforces multiples of 5 for delivery metrics.",
     "Don't hide failing projects; the Board View will flag anomalies regardless.",
-    "Don't share the gatekeeper password with unauthorized personnel."
-  ]
+    "Don't share the gatekeeper password with unauthorized personnel.",
+  ],
 };
 
 // Firebase Setup
@@ -67,7 +144,7 @@ let firebaseConfig = null;
 try {
   firebaseConfig = rawFirebaseConfig ? JSON.parse(rawFirebaseConfig) : null;
 } catch (e) {
-  console.error('Invalid VITE_FIREBASE_CONFIG JSON:', e);
+  console.error("Invalid VITE_FIREBASE_CONFIG JSON:", e);
 }
 
 let app = null;
@@ -80,21 +157,22 @@ if (firebaseConfig) {
   db = getFirestore(app);
 }
 
-const appId = import.meta.env.VITE_APP_ID || 'delivery-cmd-default';
+const appId = import.meta.env.VITE_APP_ID || "delivery-cmd-default";
 
 export default function App() {
   const [user, setUser] = useState(null);
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [passwordInput, setPasswordInput] = useState("");
   const [loginError, setLoginError] = useState("");
-  
+
   const [allClients, setAllClients] = useState([]);
-  const [selectedQuarter, setSelectedQuarter] = useState("Q1 2025");
+  const [selectedQuarter, setSelectedQuarter] = useState("Feb 2026");
   const [isUploading, setIsUploading] = useState(false);
+  const [yearlyUploadsList, setYearlyUploadsList] = useState([]);
 
   // Toggle state for BU categories
   const [expandedBUs, setExpandedBUs] = useState(
-    BUSINESS_UNITS.reduce((acc, bu) => ({ ...acc, [bu]: true }), {})
+    BUSINESS_UNITS.reduce((acc, bu) => ({ ...acc, [bu]: true }), {}),
   );
 
   // Auth Effect
@@ -102,7 +180,7 @@ export default function App() {
     if (!auth) return;
     const initAuth = async () => {
       // eslint-disable-next-line no-undef
-      if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+      if (typeof __initial_auth_token !== "undefined" && __initial_auth_token) {
         // eslint-disable-next-line no-undef
         await signInWithCustomToken(auth, __initial_auth_token);
       } else {
@@ -117,34 +195,77 @@ export default function App() {
   // Firestore Sync Effect
   useEffect(() => {
     if (!db || !user || !isAuthorized) return;
-    const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'clients');
-    const unsubscribe = onSnapshot(query(colRef), (snapshot) => {
-      const data = snapshot.docs.map(d => ({ ...d.data(), id: d.id }));
-      setAllClients(data);
-    }, (err) => console.error("Firestore Error:", err));
+    const colRef = collection(
+      db,
+      "artifacts",
+      appId,
+      "public",
+      "data",
+      "clients",
+    );
+    const unsubscribe = onSnapshot(
+      query(colRef),
+      (snapshot) => {
+        const data = snapshot.docs.map((d) => ({ ...d.data(), id: d.id }));
+        setAllClients(data);
+      },
+      (err) => console.error("Firestore Error:", err),
+    );
+    return () => unsubscribe();
+  }, [user, isAuthorized]);
+
+  // Yearly uploads sync (to know which months already have data)
+  useEffect(() => {
+    if (!db || !user || !isAuthorized) return;
+    const currentYear = new Date().getFullYear();
+    const yearlyRef = doc(
+      db,
+      "artifacts",
+      appId,
+      "public",
+      "data",
+      "yearlyUploads",
+      String(currentYear),
+    );
+    const unsubscribe = onSnapshot(
+      yearlyRef,
+      (snapshot) => {
+        const list = snapshot.exists() ? snapshot.data().periods || [] : [];
+        setYearlyUploadsList(list);
+      },
+      (err) => console.error("Yearly uploads sync error:", err),
+    );
     return () => unsubscribe();
   }, [user, isAuthorized]);
 
   // Derived State
   const currentClients = useMemo(
-    () => allClients.filter(c => c.quarter === selectedQuarter),
-    [allClients, selectedQuarter]
+    () => allClients.filter((c) => c.quarter === selectedQuarter),
+    [allClients, selectedQuarter],
   );
 
   const prevQuarter = useMemo(() => {
-    const idx = QUARTERS.indexOf(selectedQuarter);
-    return idx > 0 ? QUARTERS[idx - 1] : null;
+    const idx = MONTHS.indexOf(selectedQuarter);
+    return idx > 0 ? MONTHS[idx - 1] : null;
   }, [selectedQuarter]);
+
+  const selectedMonthHasData = useMemo(
+    () =>
+      yearlyUploadsList.some(
+        (entry) => (entry.month || entry.period) === selectedQuarter,
+      ),
+    [yearlyUploadsList, selectedQuarter],
+  );
 
   const calculateStats = (clientList) => {
     const stats = {};
-    BUSINESS_UNITS.forEach(bu => {
+    BUSINESS_UNITS.forEach((bu) => {
       stats[bu] = {};
-      KRA_METRICS.forEach(kra => {
+      KRA_METRICS.forEach((kra) => {
         const values = clientList
-          .filter(c => c.activeBUs.includes(bu))
-          .map(c => c.buData[bu]?.[kra.id])
-          .filter(v => v !== undefined);
+          .filter((c) => c.activeBUs.includes(bu))
+          .map((c) => c.buData[bu]?.[kra.id])
+          .filter((v) => v !== undefined);
         stats[bu][kra.id] = values.length
           ? (values.reduce((a, b) => a + b, 0) / values.length).toFixed(2)
           : null;
@@ -153,11 +274,14 @@ export default function App() {
     return stats;
   };
 
-  const activeStats = useMemo(() => calculateStats(currentClients), [currentClients]);
+  const activeStats = useMemo(
+    () => calculateStats(currentClients),
+    [currentClients],
+  );
 
   const historicalStats = useMemo(() => {
     if (!prevQuarter) return null;
-    return calculateStats(allClients.filter(c => c.quarter === prevQuarter));
+    return calculateStats(allClients.filter((c) => c.quarter === prevQuarter));
   }, [allClients, prevQuarter]);
 
   const handleLogin = (e) => {
@@ -171,16 +295,19 @@ export default function App() {
   };
 
   const toggleBU = (bu) => {
-    setExpandedBUs(prev => ({ ...prev, [bu]: !prev[bu] }));
+    setExpandedBUs((prev) => ({ ...prev, [bu]: !prev[bu] }));
   };
 
   const saveClient = async (clientData) => {
     if (!user || !db) return;
-    const compositeId = `${clientData.quarter}_${clientData.name.replace(/\s+/g, '_')}`;
-    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'clients', compositeId), {
-      ...clientData,
-      id: compositeId
-    });
+    const compositeId = `${clientData.quarter}_${clientData.name.replace(/\s+/g, "_")}`;
+    await setDoc(
+      doc(db, "artifacts", appId, "public", "data", "clients", compositeId),
+      {
+        ...clientData,
+        id: compositeId,
+      },
+    );
   };
 
   const handleCsvUpload = (e) => {
@@ -190,33 +317,39 @@ export default function App() {
     const reader = new FileReader();
     reader.onload = async (event) => {
       try {
-        const text = typeof event.target?.result === 'string' ? event.target.result : '';
+        const text =
+          typeof event.target?.result === "string" ? event.target.result : "";
         const rows = text
-          .split('\n')
-          .map(r => r.split(',').map(c => c.trim()))
-          .filter(r => r.length >= 6);
+          .split("\n")
+          .map((r) => r.split(",").map((c) => c.trim()))
+          .filter((r) => r.length >= 6);
 
         const quarterMap = new Map();
         for (let i = 1; i < rows.length; i += 1) {
-          const [name, bu, margin, otd, obd, csat] = rows[i];
+          const [name, bu, margin, otd, obd, csat, techDebtRaw, aiFirstRaw] =
+            rows[i];
           if (!name || !BUSINESS_UNITS.includes(bu)) continue;
           if (!quarterMap.has(name)) {
             quarterMap.set(name, {
               name,
               quarter: selectedQuarter,
               activeBUs: [],
-              buData: {}
+              buData: {},
             });
           }
           const client = quarterMap.get(name);
           if (!client.activeBUs.includes(bu)) client.activeBUs.push(bu);
+          const techDebt =
+            rows[i].length >= 7 ? Number.parseFloat(techDebtRaw) || 0 : 0;
+          const aiFirst =
+            rows[i].length >= 8 ? Number.parseFloat(aiFirstRaw) || 0 : 0;
           client.buData[bu] = {
             margin: Number.parseFloat(margin) || 0,
             otd: Math.round((Number.parseFloat(otd) || 0) / 5) * 5,
             obd: Math.round((Number.parseFloat(obd) || 0) / 5) * 5,
             csat: Number.parseFloat(csat) || 0,
-            techDebt: 0,
-            aiFirst: 0
+            techDebt: Math.round(techDebt / 5) * 5,
+            aiFirst: Math.round(aiFirst / 5) * 5,
           };
         }
 
@@ -224,20 +357,82 @@ export default function App() {
         const results = await Promise.allSettled(
           clients.map((client) =>
             saveClient(client).catch((err) => {
-              console.error('saveClient failed for', client.name, err);
+              console.error("saveClient failed for", client.name, err);
               throw err;
-            })
-          )
+            }),
+          ),
         );
 
-        const failed = results.filter((r) => r.status === 'rejected');
+        const failed = results.filter((r) => r.status === "rejected");
         if (failed.length > 0) {
-          console.error('Some rows failed to sync:', failed);
-          alert(`Some rows failed to sync (${failed.length}). Check console for details.`);
+          console.error("Some rows failed to sync:", failed);
+          alert(
+            `Some rows failed to sync (${failed.length}). Check console for details.`,
+          );
+        }
+
+        // Build array of row objects for yearly JSON (one per client-BU row, matching CSV structure)
+        const periodData = [];
+        clients.forEach((client) => {
+          client.activeBUs.forEach((bu) => {
+            const d = client.buData[bu];
+            if (!d) return;
+            periodData.push({
+              clientName: client.name,
+              businessUnit: bu,
+              contributionMargin: d.margin,
+              onTimeDelivery: d.otd,
+              onBudgetDelivery: d.obd,
+              csat: d.csat,
+              techDebtIndex: d.techDebt,
+              aiFirstDevPercent: d.aiFirst,
+            });
+          });
+        });
+
+        // Persist to Firestore yearly uploads (create once, then update by month)
+        if (db && periodData.length > 0) {
+          const currentYear = new Date().getFullYear();
+          const yearlyRef = doc(
+            db,
+            "artifacts",
+            appId,
+            "public",
+            "data",
+            "yearlyUploads",
+            String(currentYear),
+          );
+          const yearlySnap = await getDoc(yearlyRef);
+          let periods = yearlySnap.exists()
+            ? yearlySnap.data().periods || []
+            : [];
+          const monthKey = (p) => p.month || p.period;
+          const periodIndex = periods.findIndex(
+            (p) => monthKey(p) === selectedQuarter,
+          );
+          const monthEntry = { month: selectedQuarter, data: periodData };
+          if (periodIndex >= 0) {
+            periods = [
+              ...periods.slice(0, periodIndex),
+              monthEntry,
+              ...periods.slice(periodIndex + 1),
+            ];
+          } else {
+            periods = [...periods, monthEntry].sort((a, b) => {
+              const idxA = MONTHS.indexOf(monthKey(a));
+              const idxB = MONTHS.indexOf(monthKey(b));
+              return idxA - idxB;
+            });
+          }
+          await setDoc(
+            yearlyRef,
+            { year: currentYear, periods },
+            { merge: true },
+          );
         }
       } catch (err) {
-        console.error('CSV upload failed:', err);
-        alert('Upload failed while syncing data. Check console for details.');
+        console.error("CSV upload failed:", err);
+        alert("Upload failed while syncing data. Check console for details.");
       } finally {
         setIsUploading(false);
         if (e.target) e.target.value = null;
@@ -248,11 +443,62 @@ export default function App() {
 
   const deleteClient = async (id) => {
     if (!db) return;
-    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'clients', id));
+    await deleteDoc(
+      doc(db, "artifacts", appId, "public", "data", "clients", id),
+    );
+  };
+
+  const handleDownloadYearlyJson = async () => {
+    if (!db) return;
+    const currentYear = new Date().getFullYear();
+    const yearlyRef = doc(
+      db,
+      "artifacts",
+      appId,
+      "public",
+      "data",
+      "yearlyUploads",
+      String(currentYear),
+    );
+    let snap;
+    try {
+      snap = await getDoc(yearlyRef);
+    } catch (err) {
+      const isOffline =
+        err?.message?.includes("offline") || err?.code === "unavailable";
+      if (isOffline) {
+        try {
+          snap = await getDocFromCache(yearlyRef);
+        } catch (cacheErr) {
+          alert(
+            "You're offline and yearly data hasn't been loaded yet. Connect to the internet and try again.",
+          );
+          return;
+        }
+      } else {
+        console.error("Download yearly JSON failed:", err);
+        alert("Download failed. Check your connection and try again.");
+        return;
+      }
+    }
+    const raw = snap.exists() ? snap.data().periods || [] : [];
+    const payload = raw.map((entry) => ({
+      month: entry.month || entry.period,
+      data: entry.data || [],
+    }));
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `delivery-data-${currentYear}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   const updateMetric = (clientId, bu, metricId, value) => {
-    const client = allClients.find(c => c.id === clientId);
+    const client = allClients.find((c) => c.id === clientId);
     if (!client) return;
     void saveClient({
       ...client,
@@ -260,9 +506,9 @@ export default function App() {
         ...client.buData,
         [bu]: {
           ...client.buData[bu],
-          [metricId]: Number.parseFloat(value) || 0
-        }
-      }
+          [metricId]: Number.parseFloat(value) || 0,
+        },
+      },
     });
   };
 
@@ -270,6 +516,13 @@ export default function App() {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
         <div className="bg-white border border-slate-200 p-10 rounded-3xl shadow-2xl max-w-md w-full text-center">
+          <div className="flex justify-center mb-6">
+            <img
+              src="https://www.sportzinteractive.net/static-assets/images/si-logo.svg?v=2.2"
+              alt="SI Logo"
+              className="h-9 w-auto object-contain"
+            />
+          </div>
           <div className="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
             <Lock size={32} />
           </div>
@@ -277,7 +530,7 @@ export default function App() {
             Executive Gateway
           </h1>
           <form onSubmit={handleLogin} className="space-y-4">
-            <input 
+            <input
               type="password"
               placeholder="Authorization Code"
               className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-mono text-center"
@@ -286,7 +539,7 @@ export default function App() {
             />
             {loginError && (
               <div className="text-rose-600 text-xs font-bold flex items-center justify-center gap-1">
-                <AlertTriangle size={14}/> 
+                <AlertTriangle size={14} />
                 {loginError}
               </div>
             )}
@@ -311,39 +564,57 @@ export default function App() {
 
       {/* Header */}
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-        <div>
+        <div className="flex items-center gap-3">
+          <img
+            src="https://www.sportzinteractive.net/static-assets/images/si-logo.svg?v=2.2"
+            alt="SI Logo"
+            className="h-12 w-auto object-contain"
+          />
           <h1 className="text-2xl font-black tracking-tight text-slate-900 flex items-center gap-2">
-            <LayoutDashboard className="text-indigo-600" />
-            Strategic Delivery Command
+            Pitch Report
           </h1>
-          <p className="text-slate-500 font-medium mt-1">Institutional Governance Matrix</p>
         </div>
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex items-center bg-white border border-slate-200 rounded-xl px-3 py-2 shadow-sm">
             <Calendar size={18} className="text-slate-400 mr-2" />
-            <select 
-              value={selectedQuarter} 
+            <select
+              value={selectedQuarter}
               onChange={(e) => setSelectedQuarter(e.target.value)}
               className="bg-transparent font-bold text-slate-700 outline-none cursor-pointer"
             >
-              {QUARTERS.map(q => (
-                <option key={q} value={q}>
-                  {q}
+              {MONTHS.map((m) => (
+                <option key={m} value={m}>
+                  {m}
                 </option>
               ))}
             </select>
           </div>
-          <label className="cursor-pointer bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-emerald-100 transition-all">
-            <UploadCloud size={18} />
-            {isUploading ? 'Syncing...' : 'Upload Quarter CSV'}
-            <input type="file" accept=".csv" className="hidden" onChange={handleCsvUpload} />
-          </label>
+          {!selectedMonthHasData && (
+            <label className="cursor-pointer bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-emerald-100 transition-all">
+              <UploadCloud size={18} />
+              {isUploading ? "Syncing..." : "Upload Month CSV"}
+              <input
+                type="file"
+                accept=".csv"
+                className="hidden"
+                onChange={handleCsvUpload}
+              />
+            </label>
+          )}
+          <button
+            type="button"
+            onClick={handleDownloadYearlyJson}
+            className="bg-white border border-slate-200 hover:border-indigo-300 text-slate-700 hover:text-indigo-600 px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-sm transition-all"
+          >
+            <Download size={18} />
+            Download yearly JSON
+          </button>
           <button
             type="button"
             onClick={() => setIsAuthorized(false)}
             className="p-2.5 rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-rose-600 transition-colors"
           >
-            <LogOut size={20}/>
+            <LogOut size={20} />
           </button>
         </div>
       </header>
@@ -354,7 +625,7 @@ export default function App() {
           <div className="flex items-center gap-2">
             <TrendingUp className="text-indigo-400" size={20} />
             <h2 className="text-xs font-black uppercase tracking-widest text-slate-400">
-              Quarterly Trends: {selectedQuarter}
+              Monthly Trends: {selectedQuarter}
             </h2>
           </div>
         </div>
@@ -363,7 +634,7 @@ export default function App() {
             <thead className="bg-slate-950/50 text-[10px] font-black uppercase tracking-tighter text-slate-500">
               <tr>
                 <th className="px-8 py-4">Business Unit</th>
-                {KRA_METRICS.map(m => (
+                {KRA_METRICS.map((m) => (
                   <th key={m.id} className="px-4 py-4 text-center">
                     {m.label}
                   </th>
@@ -371,40 +642,50 @@ export default function App() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800">
-              {BUSINESS_UNITS.map(bu => (
-                <tr key={bu} className="hover:bg-slate-800/40 transition-colors">
+              {BUSINESS_UNITS.map((bu) => (
+                <tr
+                  key={bu}
+                  className="hover:bg-slate-800/40 transition-colors"
+                >
                   <td className="px-8 py-5 font-bold text-sm">{bu}</td>
-                  {KRA_METRICS.map(kra => {
+                  {KRA_METRICS.map((kra) => {
                     const currentVal = activeStats[bu][kra.id];
-                    const prevVal = historicalStats ? historicalStats[bu][kra.id] : null;
+                    const prevVal = historicalStats
+                      ? historicalStats[bu][kra.id]
+                      : null;
                     const delta =
                       currentVal && prevVal
-                        ? (Number.parseFloat(currentVal) - Number.parseFloat(prevVal)).toFixed(1)
+                        ? (
+                            Number.parseFloat(currentVal) -
+                            Number.parseFloat(prevVal)
+                          ).toFixed(1)
                         : null;
                     return (
                       <td key={kra.id} className="px-4 py-5 text-center">
                         <div className="flex flex-col items-center">
                           <span className="font-mono text-lg font-bold">
-                            {currentVal || '—'}
-                            <span className="text-[10px] opacity-30 ml-0.5">{kra.suffix}</span>
+                            {currentVal || "—"}
+                            <span className="text-[10px] opacity-30 ml-0.5">
+                              {kra.suffix}
+                            </span>
                           </span>
-                          {delta && delta !== '0.0' && (
+                          {delta && delta !== "0.0" && (
                             <span
                               className={`text-[9px] font-black flex items-center gap-0.5 ${
                                 Number.parseFloat(delta) > 0
                                   ? kra.inverse
-                                    ? 'text-rose-500'
-                                    : 'text-emerald-500'
+                                    ? "text-rose-500"
+                                    : "text-emerald-500"
                                   : kra.inverse
-                                  ? 'text-emerald-500'
-                                  : 'text-rose-500'
+                                    ? "text-emerald-500"
+                                    : "text-rose-500"
                               }`}
                             >
                               {Number.parseFloat(delta) > 0 ? (
-                                <ArrowUp size={10}/>
+                                <ArrowUp size={10} />
                               ) : (
-                                <ArrowDown size={10}/>
-                              )}{' '}
+                                <ArrowDown size={10} />
+                              )}{" "}
                               {Math.abs(Number(delta))}
                             </span>
                           )}
@@ -428,27 +709,33 @@ export default function App() {
           </h2>
         </div>
 
-        {BUSINESS_UNITS.map(bu => {
-          const buClients = currentClients.filter(c => c.activeBUs.includes(bu));
+        {BUSINESS_UNITS.map((bu) => {
+          const buClients = currentClients.filter((c) =>
+            c.activeBUs.includes(bu),
+          );
           const isExpanded = expandedBUs[bu];
-          
+
           return (
             <div
               key={bu}
               className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm transition-all"
             >
               {/* BU Category Header */}
-              <button 
+              <button
                 type="button"
                 onClick={() => toggleBU(bu)}
                 className={`w-full p-5 flex items-center justify-between transition-colors ${
-                  isExpanded ? 'bg-slate-50 border-b border-slate-100' : 'hover:bg-slate-50'
+                  isExpanded
+                    ? "bg-slate-50 border-b border-slate-100"
+                    : "hover:bg-slate-50"
                 }`}
               >
                 <div className="flex items-center gap-3">
                   <div
                     className={`p-2 rounded-lg ${
-                      isExpanded ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-400'
+                      isExpanded
+                        ? "bg-indigo-600 text-white"
+                        : "bg-slate-100 text-slate-400"
                     }`}
                   >
                     <BarChart3 size={18} />
@@ -476,7 +763,7 @@ export default function App() {
                     <thead className="bg-slate-50/50 text-[9px] font-black uppercase tracking-widest text-slate-400 border-b border-slate-100">
                       <tr>
                         <th className="px-8 py-4 w-64">Client Name</th>
-                        {KRA_METRICS.map(m => (
+                        {KRA_METRICS.map((m) => (
                           <th key={m.id} className="px-4 py-4 text-center">
                             {m.label}
                           </th>
@@ -484,14 +771,17 @@ export default function App() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                      {buClients.map(client => (
-                        <tr key={`${client.id}-${bu}`} className="hover:bg-indigo-50/10 transition-colors group">
+                      {buClients.map((client) => (
+                        <tr
+                          key={`${client.id}-${bu}`}
+                          className="hover:bg-indigo-50/10 transition-colors group"
+                        >
                           <td className="px-8 py-4">
                             <div className="flex flex-col">
                               <span className="text-sm font-bold text-slate-800">
                                 {client.name}
                               </span>
-                              <button 
+                              <button
                                 type="button"
                                 onClick={() => deleteClient(client.id)}
                                 className="text-[9px] text-rose-500 font-black uppercase opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 mt-1"
@@ -500,15 +790,20 @@ export default function App() {
                               </button>
                             </div>
                           </td>
-                          {KRA_METRICS.map(kra => (
+                          {KRA_METRICS.map((kra) => (
                             <td key={kra.id} className="px-4 py-3 text-center">
                               <div className="flex flex-col items-center">
-                                <input 
-                                  type="number" 
-                                  step={kra.step} 
-                                  value={client.buData[bu][kra.id]} 
+                                <input
+                                  type="number"
+                                  step={kra.step}
+                                  value={client.buData[bu][kra.id]}
                                   onChange={(e) =>
-                                    updateMetric(client.id, bu, kra.id, e.target.value)
+                                    updateMetric(
+                                      client.id,
+                                      bu,
+                                      kra.id,
+                                      e.target.value,
+                                    )
                                   }
                                   className="w-16 bg-white border border-slate-200 rounded-lg text-center font-bold text-sm p-1 outline-none focus:ring-2 focus:ring-indigo-100"
                                 />
@@ -526,7 +821,7 @@ export default function App() {
                             colSpan={7}
                             className="px-8 py-10 text-center text-slate-400 text-xs italic font-medium"
                           >
-                            No clients currently mapped to {bu} for this quarter.
+                            No clients currently mapped to {bu} for this month.
                           </td>
                         </tr>
                       )}
@@ -543,7 +838,7 @@ export default function App() {
       <footer className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-10 border-t border-slate-200">
         <div>
           <h3 className="text-emerald-600 font-black text-xs uppercase tracking-widest mb-4 flex items-center gap-2">
-            <CheckCircle2 size={16}/> Governance Dos
+            <CheckCircle2 size={16} /> Governance Dos
           </h3>
           <ul className="space-y-3">
             {GOVERNANCE_RULES.dos.map((rule, i) => (
@@ -556,7 +851,7 @@ export default function App() {
         </div>
         <div>
           <h3 className="text-rose-600 font-black text-xs uppercase tracking-widest mb-4 flex items-center gap-2">
-            <AlertTriangle size={16}/> Governance Don&apos;ts
+            <AlertTriangle size={16} /> Governance Don&apos;ts
           </h3>
           <ul className="space-y-3">
             {GOVERNANCE_RULES.donts.map((rule) => (
@@ -571,4 +866,3 @@ export default function App() {
     </div>
   );
 }
-
