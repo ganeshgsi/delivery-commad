@@ -453,7 +453,16 @@ export default function App() {
     );
   };
 
-  const handleDownloadYearlyJson = async () => {
+  const escapeCsvValue = (val) => {
+    if (val == null) return "";
+    const s = String(val);
+    if (s.includes(",") || s.includes('"') || s.includes("\n") || s.includes("\r")) {
+      return `"${s.replace(/"/g, '""')}"`;
+    }
+    return s;
+  };
+
+  const handleDownloadYearlyCsv = async () => {
     if (!db) return;
     const currentYear = new Date().getFullYear();
     const yearlyRef = doc(
@@ -481,7 +490,7 @@ export default function App() {
           return;
         }
       } else {
-        console.error("Download yearly JSON failed:", err);
+        console.error("Download yearly CSV failed:", err);
         alert("Download failed. Check your connection and try again.");
         return;
       }
@@ -491,13 +500,34 @@ export default function App() {
       month: entry.month || entry.period,
       data: entry.data || [],
     }));
-    const blob = new Blob([JSON.stringify(payload, null, 2)], {
-      type: "application/json",
+    const headers = [
+      "month",
+      "clientName",
+      "businessUnit",
+      "contributionMargin",
+      "onTimeDelivery",
+      "onBudgetDelivery",
+      "csat",
+      "techDebtIndex",
+      "aiFirstDevPercent",
+    ];
+    const rows = [headers.join(",")];
+    payload.forEach((entry) => {
+      const month = entry.month;
+      (entry.data || []).forEach((row) => {
+        rows.push(
+          headers
+            .map((h) => escapeCsvValue(h === "month" ? month : row[h]))
+            .join(","),
+        );
+      });
     });
+    const csv = rows.join("\r\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `delivery-data-${currentYear}.json`;
+    a.download = `delivery-data-${currentYear}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -608,11 +638,11 @@ export default function App() {
           )}
           <button
             type="button"
-            onClick={handleDownloadYearlyJson}
+            onClick={handleDownloadYearlyCsv}
             className="bg-white border border-slate-200 hover:border-indigo-300 text-slate-700 hover:text-indigo-600 px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-sm transition-all"
           >
             <Download size={18} />
-            Download yearly JSON
+            Download yearly CSV
           </button>
           <button
             type="button"
