@@ -559,8 +559,8 @@ export default function App() {
 
   if (!isAuthorized) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#eef0f4] bg-mesh-light p-6">
-        <div className="w-full max-w-md rounded-[1.75rem] border border-white/70 bg-white/85 p-10 text-center shadow-premium-lg backdrop-blur-xl">
+      <div className="flex min-h-screen items-center justify-center bg-[#f3f4f8] bg-mesh-light p-6">
+        <div className="w-full max-w-md rounded-[1.75rem] border border-white/70 bg-white/90 p-10 text-center shadow-premium-lg backdrop-blur-xl">
           <div className="mb-6 flex justify-center">
             <img
               src="https://www.sportzinteractive.net/static-assets/images/si-logo.svg?v=2.2"
@@ -568,10 +568,10 @@ export default function App() {
               className="h-9 w-auto object-contain"
             />
           </div>
-          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-lg shadow-indigo-500/30">
+          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-md bg-brand-cta text-white shadow-brand-red">
             <Lock size={30} strokeWidth={2.25} />
           </div>
-          <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.2em] text-indigo-600">
+          <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.2em] text-brand-blue">
             Strategic Delivery Command
           </p>
           <h1 className="mb-6 text-2xl font-extrabold tracking-tight text-slate-900">
@@ -581,19 +581,19 @@ export default function App() {
             <input
               type="password"
               placeholder="Authorization code"
-              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-center font-mono text-sm outline-none ring-indigo-500/0 transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/25"
+              className="w-full rounded-md border border-slate-200 bg-white px-4 py-3 text-center font-mono text-sm outline-none transition focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20"
               value={passwordInput}
               onChange={(e) => setPasswordInput(e.target.value)}
             />
             {loginError && (
-              <div className="flex items-center justify-center gap-1.5 text-xs font-semibold text-rose-600">
+              <div className="flex items-center justify-center gap-1.5 text-xs font-semibold text-brand-red">
                 <AlertTriangle size={14} />
                 {loginError}
               </div>
             )}
             <button
               type="submit"
-              className="w-full rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 py-3.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/25 transition hover:from-indigo-500 hover:to-violet-500"
+              className="w-full rounded-md bg-brand-red py-3.5 text-sm font-semibold text-white shadow-brand-red transition hover:bg-brand-red-dark"
             >
               Authorize access
             </button>
@@ -620,7 +620,7 @@ export default function App() {
               className="h-11 w-auto shrink-0 object-contain md:h-12"
             />
             <div className="min-w-0">
-              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-indigo-600/90">
+              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-brand-blue">
                 Strategic Delivery Command
               </p>
               <h1 className="mt-1 text-balance text-2xl font-extrabold tracking-tight text-slate-900 md:text-3xl">
@@ -634,7 +634,7 @@ export default function App() {
           </div>
           <div className="flex flex-wrap items-center gap-2.5 md:justify-end md:gap-3">
             <div className="flex items-center gap-2 rounded-2xl border border-slate-200/90 bg-white px-3.5 py-2.5 shadow-sm">
-              <Calendar size={17} className="shrink-0 text-indigo-500" />
+              <Calendar size={17} className="shrink-0 text-brand-blue" />
               <select
                 value={selectedQuarter}
                 onChange={(e) => setSelectedQuarter(e.target.value)}
@@ -648,7 +648,7 @@ export default function App() {
               </select>
             </div>
             {!selectedMonthHasData && (
-              <label className="inline-flex cursor-pointer items-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 transition hover:from-emerald-500 hover:to-teal-500">
+              <label className="inline-flex cursor-pointer items-center gap-2 rounded-md bg-brand-red px-5 py-2.5 text-sm font-semibold text-white shadow-brand-red transition hover:bg-brand-red-dark">
                 <UploadCloud size={18} />
                 {isUploading ? "Syncing..." : "Upload month CSV"}
                 <input
@@ -662,7 +662,7 @@ export default function App() {
             <button
               type="button"
               onClick={handleDownloadYearlyCsv}
-              className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-indigo-200 hover:text-indigo-700"
+              className="inline-flex items-center gap-2 rounded-md bg-brand-blue px-4 py-2.5 text-sm font-semibold text-white shadow-brand transition hover:bg-brand-blue-dark"
             >
               <Download size={18} />
               Yearly CSV
@@ -670,7 +670,7 @@ export default function App() {
             <button
               type="button"
               onClick={() => setIsAuthorized(false)}
-              className="rounded-2xl border border-slate-200 bg-white p-2.5 text-slate-400 shadow-sm transition hover:border-rose-200 hover:text-rose-600"
+              className="rounded-md border border-slate-300 bg-slate-100 p-2.5 text-slate-600 shadow-sm transition hover:border-slate-400 hover:text-slate-900"
               title="Sign out"
             >
               <LogOut size={20} />
@@ -711,8 +711,8 @@ export default function App() {
         <section className="overflow-hidden rounded-[1.75rem] border border-slate-800/80 bg-gradient-to-b from-slate-900 via-slate-950 to-slate-950 text-white shadow-premium-lg shadow-slate-900/30">
           <div className="flex items-center justify-between border-b border-white/[0.08] bg-white/[0.03] px-6 py-5 backdrop-blur-sm">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500/15 ring-1 ring-indigo-400/30">
-                <TrendingUp className="text-indigo-300" size={20} />
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-blue/15 ring-1 ring-brand-blue/35">
+                <TrendingUp className="text-brand-blue-light" size={20} />
               </div>
               <div>
                 <h2 className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">
@@ -774,11 +774,11 @@ export default function App() {
                               className={`text-[9px] font-black flex items-center gap-0.5 ${
                                 Number.parseFloat(delta) > 0
                                   ? kra.inverse
-                                    ? "text-rose-500"
-                                    : "text-emerald-500"
+                                    ? "text-brand-red"
+                                    : "text-brand-blue"
                                   : kra.inverse
-                                    ? "text-emerald-500"
-                                    : "text-rose-500"
+                                    ? "text-brand-blue"
+                                    : "text-brand-red"
                               }`}
                             >
                               {Number.parseFloat(delta) > 0 ? (
@@ -804,7 +804,7 @@ export default function App() {
         <section className="space-y-6">
           <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-md shadow-indigo-500/30">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-blue text-white shadow-brand">
                 <Users size={20} />
               </div>
               <div>
@@ -830,7 +830,7 @@ export default function App() {
           return (
             <div
               key={bu}
-              className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-premium transition-all hover:border-indigo-200/70 hover:shadow-premium-lg"
+              className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-premium transition-all hover:border-brand-blue/35 hover:shadow-premium-lg"
             >
               {/* BU Category Header */}
               <button
@@ -846,7 +846,7 @@ export default function App() {
                   <div
                     className={`rounded-xl p-2.5 ${
                       isExpanded
-                        ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/25"
+                        ? "bg-brand-blue text-white shadow-brand"
                         : "bg-slate-100 text-slate-500"
                     }`}
                   >
@@ -886,7 +886,7 @@ export default function App() {
                       {buClients.map((client) => (
                         <tr
                           key={`${client.id}-${bu}`}
-                          className="hover:bg-indigo-50/10 transition-colors group"
+                          className="transition-colors hover:bg-brand-blue/[0.06] group"
                         >
                           <td className="px-8 py-4">
                             <div className="flex flex-col">
@@ -896,7 +896,7 @@ export default function App() {
                               <button
                                 type="button"
                                 onClick={() => deleteClient(client.id)}
-                                className="text-[9px] text-rose-500 font-black uppercase opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 mt-1"
+                                className="mt-1 flex items-center gap-1 text-[9px] font-black uppercase text-brand-red opacity-0 transition-opacity group-hover:opacity-100"
                               >
                                 <Trash2 size={10} /> Delete Record
                               </button>
@@ -917,7 +917,7 @@ export default function App() {
                                       e.target.value,
                                     )
                                   }
-                                  className="w-16 rounded-lg border border-slate-200 bg-white p-1.5 text-center text-sm font-semibold outline-none ring-indigo-500/0 transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20"
+                                  className="w-16 rounded-lg border border-slate-200 bg-white p-1.5 text-center text-sm font-semibold outline-none transition focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20"
                                 />
                                 <div className="text-[8px] font-black text-slate-300 uppercase mt-0.5">
                                   {kra.suffix}
@@ -949,26 +949,26 @@ export default function App() {
         {/* Governance Protocol */}
         <footer className="grid grid-cols-1 gap-8 rounded-3xl border border-slate-200/80 bg-white/70 p-8 shadow-premium backdrop-blur-md md:grid-cols-2 md:gap-12">
           <div>
-            <h3 className="mb-4 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-700">
+            <h3 className="mb-4 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.18em] text-brand-blue">
               <CheckCircle2 size={16} strokeWidth={2.25} /> Governance — do
             </h3>
             <ul className="space-y-3">
               {GOVERNANCE_RULES.dos.map((rule) => (
                 <li key={rule} className="flex gap-3 text-sm leading-relaxed text-slate-600">
-                  <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-emerald-500" />
+                  <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-brand-blue" />
                   {rule}
                 </li>
               ))}
             </ul>
           </div>
           <div>
-            <h3 className="mb-4 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.18em] text-rose-700">
+            <h3 className="mb-4 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.18em] text-brand-red">
               <AlertTriangle size={16} strokeWidth={2.25} /> Governance — don&apos;t
             </h3>
             <ul className="space-y-3">
               {GOVERNANCE_RULES.donts.map((rule) => (
                 <li key={rule} className="flex gap-3 text-sm leading-relaxed text-slate-600">
-                  <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-rose-500" />
+                  <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-brand-red" />
                   {rule}
                 </li>
               ))}

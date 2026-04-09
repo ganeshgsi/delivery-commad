@@ -22,11 +22,12 @@ import {
   ReferenceLine,
 } from "recharts";
 
+/** Brand-aligned chart palette (primary blue + red accent + tints) */
 const BU_COLORS = {
-  "Web & Mobile": "#6366f1",
-  Gaming: "#a855f7",
-  Data: "#0ea5e9",
-  "Video Tech": "#f59e0b",
+  "Web & Mobile": "#5f52ff",
+  Gaming: "#8f84ff",
+  Data: "#5045e6",
+  "Video Tech": "#ff5463",
 };
 
 /** Short X-axis label (ASCII) — must stay in sync with ReferenceLine x */
@@ -153,21 +154,21 @@ export default function AnalyticsSection({
   }, [lineData, businessUnits]);
 
   return (
-    <section className="relative overflow-hidden rounded-[2rem] border border-white/70 bg-gradient-to-br from-white via-white to-indigo-50/[0.35] p-[1px] shadow-premium-lg shadow-indigo-950/[0.07]">
+    <section className="relative overflow-hidden rounded-[2rem] border border-white/70 bg-gradient-to-br from-white via-white to-brand-blue/10 p-[1px] shadow-premium-lg shadow-brand-blue/10">
       <div
-        className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-indigo-400/10 blur-3xl"
+        className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-brand-blue/15 blur-3xl"
         aria-hidden
       />
       <div
-        className="pointer-events-none absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-cyan-400/10 blur-3xl"
+        className="pointer-events-none absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-brand-red/10 blur-3xl"
         aria-hidden
       />
 
       <div className="relative rounded-[2rem] bg-white/80 p-6 backdrop-blur-xl md:p-8 lg:p-10">
         <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
           <div className="max-w-2xl space-y-3">
-            <div className="inline-flex items-center gap-2 rounded-full border border-indigo-200/80 bg-indigo-50/90 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-indigo-700">
-              <Sparkles size={14} className="text-indigo-500" />
+            <div className="inline-flex items-center gap-2 rounded-full border border-brand-blue/25 bg-brand-blue/5 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-brand-blue">
+              <Sparkles size={14} className="text-brand-blue" />
               Reports &amp; analytics
             </div>
             <h2 className="text-balance text-2xl font-extrabold tracking-tight text-slate-900 md:text-3xl">
@@ -189,14 +190,14 @@ export default function AnalyticsSection({
             </label>
             <div className="relative">
               <BarChart2
-                className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-indigo-500"
+                className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-brand-blue"
                 aria-hidden
               />
               <select
                 id="analytics-metric"
                 value={metricId}
                 onChange={(e) => setMetricId(e.target.value)}
-                className="w-full cursor-pointer appearance-none rounded-2xl border border-slate-200/90 bg-white py-3 pl-10 pr-4 text-sm font-semibold text-slate-800 shadow-sm outline-none ring-indigo-500/0 transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20"
+                className="w-full cursor-pointer appearance-none rounded-2xl border border-slate-200/90 bg-white py-3 pl-10 pr-4 text-sm font-semibold text-slate-800 shadow-sm outline-none transition focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20"
               >
                 {metrics.map((m) => (
                   <option key={m.id} value={m.id}>
@@ -213,7 +214,7 @@ export default function AnalyticsSection({
             <div className="flex min-h-0 flex-col rounded-2xl border border-slate-200/80 bg-gradient-to-b from-slate-50/90 to-white p-5 shadow-insetSoft md:p-6">
               <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
                 <div className="flex min-w-0 items-start gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-md shadow-indigo-500/30">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-blue text-white shadow-brand">
                     <LayoutDashboard size={20} />
                   </div>
                   <div className="min-w-0">
@@ -319,7 +320,7 @@ export default function AnalyticsSection({
                         <Tooltip
                           content={<TrendTooltip suffix={suffix} />}
                           cursor={{
-                            stroke: "#818cf8",
+                            stroke: "#5f52ff",
                             strokeWidth: 1,
                             strokeDasharray: "4 4",
                           }}
@@ -346,13 +347,13 @@ export default function AnalyticsSection({
                         {selectedMonthDisplayLabel != null && (
                           <ReferenceLine
                             x={selectedMonthDisplayLabel}
-                            stroke="#4338ca"
+                            stroke="#5f52ff"
                             strokeDasharray="6 4"
                             strokeWidth={1.5}
                             label={{
                               value: "Selected month",
                               position: "top",
-                              fill: "#4338ca",
+                              fill: "#5f52ff",
                               fontSize: 10,
                               fontWeight: 600,
                             }}
@@ -377,7 +378,7 @@ export default function AnalyticsSection({
 
           <div className="flex h-full flex-col rounded-2xl border border-slate-200/80 bg-gradient-to-b from-slate-50/90 to-white p-5 shadow-insetSoft md:p-6">
             <div className="mb-3 flex items-center gap-2.5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-violet-600 text-white shadow-sm shadow-violet-500/25">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-red text-white shadow-brand-red">
                 <PieChartIcon size={18} strokeWidth={2.25} />
               </div>
               <div>
@@ -407,7 +408,7 @@ export default function AnalyticsSection({
                           key={`cell-${entry.name}`}
                           fill={
                             BU_COLORS[entry.name] ??
-                            ["#6366f1", "#a855f7", "#0ea5e9", "#f59e0b"][
+                            ["#5f52ff", "#8f84ff", "#5045e6", "#ff5463"][
                               index % 4
                             ]
                           }
