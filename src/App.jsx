@@ -46,6 +46,8 @@ import {
   query,
 } from "firebase/firestore";
 
+import AnalyticsSection from "./components/AnalyticsSection.jsx";
+
 // Configuration constants
 const BUSINESS_UNITS = ["Web & Mobile", "Gaming", "Data", "Video Tech"];
 const MONTHS = [
@@ -288,6 +290,14 @@ export default function App() {
     if (!prevQuarter) return null;
     return calculateStats(allClients.filter((c) => c.quarter === prevQuarter));
   }, [allClients, prevQuarter]);
+
+  const statsByMonth = useMemo(() => {
+    const out = {};
+    MONTHS.forEach((m) => {
+      out[m] = calculateStats(allClients.filter((c) => c.quarter === m));
+    });
+    return out;
+  }, [allClients]);
 
   const handleLogin = (e) => {
     e.preventDefault();
@@ -549,40 +559,43 @@ export default function App() {
 
   if (!isAuthorized) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
-        <div className="bg-white border border-slate-200 p-10 rounded-3xl shadow-2xl max-w-md w-full text-center">
-          <div className="flex justify-center mb-6">
+      <div className="flex min-h-screen items-center justify-center bg-[#eef0f4] bg-mesh-light p-6">
+        <div className="w-full max-w-md rounded-[1.75rem] border border-white/70 bg-white/85 p-10 text-center shadow-premium-lg backdrop-blur-xl">
+          <div className="mb-6 flex justify-center">
             <img
               src="https://www.sportzinteractive.net/static-assets/images/si-logo.svg?v=2.2"
               alt="SI Logo"
               className="h-9 w-auto object-contain"
             />
           </div>
-          <div className="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
-            <Lock size={32} />
+          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-lg shadow-indigo-500/30">
+            <Lock size={30} strokeWidth={2.25} />
           </div>
-          <h1 className="text-2xl font-black text-slate-900 mb-2 tracking-tight">
-            Executive Gateway
+          <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.2em] text-indigo-600">
+            Strategic Delivery Command
+          </p>
+          <h1 className="mb-6 text-2xl font-extrabold tracking-tight text-slate-900">
+            Executive gateway
           </h1>
           <form onSubmit={handleLogin} className="space-y-4">
             <input
               type="password"
-              placeholder="Authorization Code"
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-mono text-center"
+              placeholder="Authorization code"
+              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-center font-mono text-sm outline-none ring-indigo-500/0 transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/25"
               value={passwordInput}
               onChange={(e) => setPasswordInput(e.target.value)}
             />
             {loginError && (
-              <div className="text-rose-600 text-xs font-bold flex items-center justify-center gap-1">
+              <div className="flex items-center justify-center gap-1.5 text-xs font-semibold text-rose-600">
                 <AlertTriangle size={14} />
                 {loginError}
               </div>
             )}
             <button
               type="submit"
-              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-indigo-200 transition-all"
+              className="w-full rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 py-3.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/25 transition hover:from-indigo-500 hover:to-violet-500"
             >
-              Authorize Access
+              Authorize access
             </button>
           </form>
         </div>
@@ -591,82 +604,132 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans p-4 md:p-8 max-w-7xl mx-auto space-y-10 pb-20">
+    <div className="min-h-screen bg-[#eef0f4] bg-mesh-light text-slate-900 font-sans">
       <style>{`
         input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         input[type=number] { -moz-appearance: textfield; }
       `}</style>
 
-      {/* Header */}
-      <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-        <div className="flex items-center gap-3">
-          <img
-            src="https://www.sportzinteractive.net/static-assets/images/si-logo.svg?v=2.2"
-            alt="SI Logo"
-            className="h-12 w-auto object-contain"
-          />
-          <h1 className="text-2xl font-black tracking-tight text-slate-900 flex items-center gap-2">
-            Pitch Report
-          </h1>
-        </div>
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="flex items-center bg-white border border-slate-200 rounded-xl px-3 py-2 shadow-sm">
-            <Calendar size={18} className="text-slate-400 mr-2" />
-            <select
-              value={selectedQuarter}
-              onChange={(e) => setSelectedQuarter(e.target.value)}
-              className="bg-transparent font-bold text-slate-700 outline-none cursor-pointer"
+      <div className="mx-auto max-w-[1580px] space-y-10 px-4 pb-24 pt-6 md:px-8 md:pt-10">
+        {/* Header */}
+        <header className="flex flex-col gap-6 rounded-3xl border border-white/60 bg-white/75 p-5 shadow-premium backdrop-blur-xl md:flex-row md:items-center md:justify-between md:p-6">
+          <div className="flex min-w-0 items-start gap-4">
+            <img
+              src="https://www.sportzinteractive.net/static-assets/images/si-logo.svg?v=2.2"
+              alt="SI Logo"
+              className="h-11 w-auto shrink-0 object-contain md:h-12"
+            />
+            <div className="min-w-0">
+              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-indigo-600/90">
+                Strategic Delivery Command
+              </p>
+              <h1 className="mt-1 text-balance text-2xl font-extrabold tracking-tight text-slate-900 md:text-3xl">
+                Executive pitch report
+              </h1>
+              <p className="mt-1.5 max-w-xl text-sm leading-relaxed text-slate-600">
+                Live KPIs by business unit, portfolio drilldown, and export-ready
+                monthly data.
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2.5 md:justify-end md:gap-3">
+            <div className="flex items-center gap-2 rounded-2xl border border-slate-200/90 bg-white px-3.5 py-2.5 shadow-sm">
+              <Calendar size={17} className="shrink-0 text-indigo-500" />
+              <select
+                value={selectedQuarter}
+                onChange={(e) => setSelectedQuarter(e.target.value)}
+                className="max-w-[200px] cursor-pointer bg-transparent text-sm font-semibold text-slate-800 outline-none"
+              >
+                {MONTHS.map((m) => (
+                  <option key={m} value={m}>
+                    {m}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {!selectedMonthHasData && (
+              <label className="inline-flex cursor-pointer items-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 transition hover:from-emerald-500 hover:to-teal-500">
+                <UploadCloud size={18} />
+                {isUploading ? "Syncing..." : "Upload month CSV"}
+                <input
+                  type="file"
+                  accept=".csv"
+                  className="hidden"
+                  onChange={handleCsvUpload}
+                />
+              </label>
+            )}
+            <button
+              type="button"
+              onClick={handleDownloadYearlyCsv}
+              className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-indigo-200 hover:text-indigo-700"
             >
-              {MONTHS.map((m) => (
-                <option key={m} value={m}>
-                  {m}
-                </option>
-              ))}
-            </select>
+              <Download size={18} />
+              Yearly CSV
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsAuthorized(false)}
+              className="rounded-2xl border border-slate-200 bg-white p-2.5 text-slate-400 shadow-sm transition hover:border-rose-200 hover:text-rose-600"
+              title="Sign out"
+            >
+              <LogOut size={20} />
+            </button>
           </div>
-          {!selectedMonthHasData && (
-            <label className="cursor-pointer bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-emerald-100 transition-all">
-              <UploadCloud size={18} />
-              {isUploading ? "Syncing..." : "Upload Month CSV"}
-              <input
-                type="file"
-                accept=".csv"
-                className="hidden"
-                onChange={handleCsvUpload}
-              />
-            </label>
-          )}
-          <button
-            type="button"
-            onClick={handleDownloadYearlyCsv}
-            className="bg-white border border-slate-200 hover:border-indigo-300 text-slate-700 hover:text-indigo-600 px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-sm transition-all"
-          >
-            <Download size={18} />
-            Download yearly CSV
-          </button>
-          <button
-            type="button"
-            onClick={() => setIsAuthorized(false)}
-            className="p-2.5 rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-rose-600 transition-colors"
-          >
-            <LogOut size={20} />
-          </button>
-        </div>
-      </header>
+        </header>
 
-      {/* Summary Table */}
-      <section className="bg-slate-900 text-white rounded-3xl overflow-hidden shadow-2xl border border-slate-800">
-        <div className="p-6 border-b border-slate-800 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <TrendingUp className="text-indigo-400" size={20} />
-            <h2 className="text-xs font-black uppercase tracking-widest text-slate-400">
-              Monthly Trends: {selectedQuarter}
-            </h2>
+        <AnalyticsSection
+          months={MONTHS}
+          businessUnits={BUSINESS_UNITS}
+          metrics={KRA_METRICS.map(({ id, label, suffix }) => ({
+            id,
+            label,
+            suffix,
+          }))}
+          statsByMonth={statsByMonth}
+          activeStats={activeStats}
+          selectedQuarter={selectedQuarter}
+          currentClients={currentClients}
+        />
+
+        <div className="relative py-2 md:py-4">
+          <div
+            className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-gradient-to-r from-transparent via-slate-300/90 to-transparent"
+            aria-hidden
+          />
+          <div className="relative flex flex-col items-center gap-2 text-center">
+            <span className="rounded-full border border-slate-200/90 bg-[#eef0f4]/95 px-5 py-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500 shadow-sm backdrop-blur-sm">
+              KPI tables &amp; portfolio
+            </span>
+            <p className="max-w-lg text-sm text-slate-500">
+              Month-over-month averages and editable client rows by business unit
+            </p>
           </div>
         </div>
-        <div className="overflow-x-auto">
+
+        {/* Summary Table */}
+        <section className="overflow-hidden rounded-[1.75rem] border border-slate-800/80 bg-gradient-to-b from-slate-900 via-slate-950 to-slate-950 text-white shadow-premium-lg shadow-slate-900/30">
+          <div className="flex items-center justify-between border-b border-white/[0.08] bg-white/[0.03] px-6 py-5 backdrop-blur-sm">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500/15 ring-1 ring-indigo-400/30">
+                <TrendingUp className="text-indigo-300" size={20} />
+              </div>
+              <div>
+                <h2 className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">
+                  Monthly KPI matrix
+                </h2>
+                <p className="mt-0.5 text-sm font-semibold text-white">
+                  {selectedQuarter}
+                  <span className="ml-2 font-normal text-slate-400">
+                    · BU averages vs prior month
+                  </span>
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="overflow-x-auto">
           <table className="w-full text-left">
-            <thead className="bg-slate-950/50 text-[10px] font-black uppercase tracking-tighter text-slate-500">
+            <thead className="bg-black/20 text-[10px] font-bold uppercase tracking-wider text-slate-500">
               <tr>
                 <th className="px-8 py-4">Business Unit</th>
                 {KRA_METRICS.map((m) => (
@@ -676,13 +739,15 @@ export default function App() {
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800">
+            <tbody className="divide-y divide-white/[0.06]">
               {BUSINESS_UNITS.map((bu) => (
                 <tr
                   key={bu}
-                  className="hover:bg-slate-800/40 transition-colors"
+                  className="transition-colors hover:bg-white/[0.04]"
                 >
-                  <td className="px-8 py-5 font-bold text-sm">{bu}</td>
+                  <td className="px-8 py-5 text-sm font-semibold text-slate-100">
+                    {bu}
+                  </td>
                   {KRA_METRICS.map((kra) => {
                     const currentVal = activeStats[bu][kra.id];
                     const prevVal = historicalStats
@@ -732,17 +797,29 @@ export default function App() {
               ))}
             </tbody>
           </table>
-        </div>
-      </section>
+          </div>
+        </section>
 
-      {/* Portfolio Categorised by BU */}
-      <section className="space-y-6">
-        <div className="flex items-center gap-2">
-          <Users className="text-indigo-600" size={20} />
-          <h2 className="text-xs font-black uppercase tracking-widest text-slate-400">
-            Portfolio Drilldown (By Business Unit)
-          </h2>
-        </div>
+        {/* Portfolio Categorised by BU */}
+        <section className="space-y-6">
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-md shadow-indigo-500/30">
+                <Users size={20} />
+              </div>
+              <div>
+                <h2 className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">
+                  Portfolio drilldown
+                </h2>
+                <p className="text-lg font-bold text-slate-900">
+                  By business unit
+                </p>
+              </div>
+            </div>
+            <p className="text-sm text-slate-500">
+              Edit metrics inline; changes sync to Firestore.
+            </p>
+          </div>
 
         {BUSINESS_UNITS.map((bu) => {
           const buClients = currentClients.filter((c) =>
@@ -753,34 +830,34 @@ export default function App() {
           return (
             <div
               key={bu}
-              className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm transition-all"
+              className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-premium transition-all hover:border-indigo-200/70 hover:shadow-premium-lg"
             >
               {/* BU Category Header */}
               <button
                 type="button"
                 onClick={() => toggleBU(bu)}
-                className={`w-full p-5 flex items-center justify-between transition-colors ${
+                className={`flex w-full items-center justify-between p-5 transition-colors ${
                   isExpanded
-                    ? "bg-slate-50 border-b border-slate-100"
-                    : "hover:bg-slate-50"
+                    ? "border-b border-slate-100 bg-slate-50/80"
+                    : "hover:bg-slate-50/80"
                 }`}
               >
                 <div className="flex items-center gap-3">
                   <div
-                    className={`p-2 rounded-lg ${
+                    className={`rounded-xl p-2.5 ${
                       isExpanded
-                        ? "bg-indigo-600 text-white"
-                        : "bg-slate-100 text-slate-400"
+                        ? "bg-indigo-600 text-white shadow-md shadow-indigo-500/25"
+                        : "bg-slate-100 text-slate-500"
                     }`}
                   >
                     <BarChart3 size={18} />
                   </div>
                   <div className="text-left">
-                    <span className="font-black text-xs uppercase tracking-widest text-slate-900">
+                    <span className="text-xs font-bold uppercase tracking-widest text-slate-800">
                       {bu}
                     </span>
-                    <p className="text-[10px] text-slate-500 font-bold">
-                      {buClients.length} Active Clients
+                    <p className="text-[11px] font-medium text-slate-500">
+                      {buClients.length} active client{buClients.length === 1 ? "" : "s"}
                     </p>
                   </div>
                 </div>
@@ -795,7 +872,7 @@ export default function App() {
               {isExpanded && (
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
-                    <thead className="bg-slate-50/50 text-[9px] font-black uppercase tracking-widest text-slate-400 border-b border-slate-100">
+                    <thead className="border-b border-slate-100 bg-slate-50/80 text-[9px] font-bold uppercase tracking-widest text-slate-500">
                       <tr>
                         <th className="px-8 py-4 w-64">Client Name</th>
                         {KRA_METRICS.map((m) => (
@@ -840,7 +917,7 @@ export default function App() {
                                       e.target.value,
                                     )
                                   }
-                                  className="w-16 bg-white border border-slate-200 rounded-lg text-center font-bold text-sm p-1 outline-none focus:ring-2 focus:ring-indigo-100"
+                                  className="w-16 rounded-lg border border-slate-200 bg-white p-1.5 text-center text-sm font-semibold outline-none ring-indigo-500/0 transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20"
                                 />
                                 <div className="text-[8px] font-black text-slate-300 uppercase mt-0.5">
                                   {kra.suffix}
@@ -869,35 +946,36 @@ export default function App() {
         })}
       </section>
 
-      {/* Governance Protocol */}
-      <footer className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-10 border-t border-slate-200">
-        <div>
-          <h3 className="text-emerald-600 font-black text-xs uppercase tracking-widest mb-4 flex items-center gap-2">
-            <CheckCircle2 size={16} /> Governance Dos
-          </h3>
-          <ul className="space-y-3">
-            {GOVERNANCE_RULES.dos.map((rule, i) => (
-              <li key={rule} className="text-sm text-slate-600 flex gap-3">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
-                {rule}
-              </li>
-            ))}
-          </ul>
-        </div>
-        <div>
-          <h3 className="text-rose-600 font-black text-xs uppercase tracking-widest mb-4 flex items-center gap-2">
-            <AlertTriangle size={16} /> Governance Don&apos;ts
-          </h3>
-          <ul className="space-y-3">
-            {GOVERNANCE_RULES.donts.map((rule) => (
-              <li key={rule} className="text-sm text-slate-600 flex gap-3">
-                <span className="w-1.5 h-1.5 rounded-full bg-rose-500 mt-1.5 shrink-0" />
-                {rule}
-              </li>
-            ))}
-          </ul>
-        </div>
-      </footer>
+        {/* Governance Protocol */}
+        <footer className="grid grid-cols-1 gap-8 rounded-3xl border border-slate-200/80 bg-white/70 p-8 shadow-premium backdrop-blur-md md:grid-cols-2 md:gap-12">
+          <div>
+            <h3 className="mb-4 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-700">
+              <CheckCircle2 size={16} strokeWidth={2.25} /> Governance — do
+            </h3>
+            <ul className="space-y-3">
+              {GOVERNANCE_RULES.dos.map((rule) => (
+                <li key={rule} className="flex gap-3 text-sm leading-relaxed text-slate-600">
+                  <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-emerald-500" />
+                  {rule}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <h3 className="mb-4 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.18em] text-rose-700">
+              <AlertTriangle size={16} strokeWidth={2.25} /> Governance — don&apos;t
+            </h3>
+            <ul className="space-y-3">
+              {GOVERNANCE_RULES.donts.map((rule) => (
+                <li key={rule} className="flex gap-3 text-sm leading-relaxed text-slate-600">
+                  <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-rose-500" />
+                  {rule}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </footer>
+      </div>
     </div>
   );
 }
