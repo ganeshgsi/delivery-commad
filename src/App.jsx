@@ -182,6 +182,29 @@ export default function App() {
     BUSINESS_UNITS.reduce((acc, bu) => ({ ...acc, [bu]: true }), {}),
   );
 
+  const [showBackToTop, setShowBackToTop] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => {
+      setShowBackToTop(window.scrollY > 400);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  const expandAllBUs = () => {
+    setExpandedBUs(
+      BUSINESS_UNITS.reduce((acc, bu) => ({ ...acc, [bu]: true }), {}),
+    );
+  };
+
+  const collapseAllBUs = () => {
+    setExpandedBUs(
+      BUSINESS_UNITS.reduce((acc, bu) => ({ ...acc, [bu]: false }), {}),
+    );
+  };
+
   // Auth Effect
   useEffect(() => {
     if (!auth) return;
@@ -610,35 +633,35 @@ export default function App() {
         input[type=number] { -moz-appearance: textfield; }
       `}</style>
 
-      <div className="mx-auto max-w-[1580px] space-y-10 px-4 pb-24 pt-6 md:px-8 md:pt-10">
-        {/* Header */}
-        <header className="flex flex-col gap-6 rounded-3xl border border-white/60 bg-white/75 p-5 shadow-premium backdrop-blur-xl md:flex-row md:items-center md:justify-between md:p-6">
-          <div className="flex min-w-0 items-start gap-4">
+      {/* Sticky chrome: controls always reachable; section links reduce long scroll */}
+      <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-[#eef0f4]/95 shadow-sm backdrop-blur-md">
+        <div className="mx-auto flex max-w-[1580px] flex-col gap-3 px-4 py-3 md:flex-row md:items-center md:justify-between md:gap-6 md:px-8 md:py-4">
+          <div className="flex min-w-0 items-start gap-3 md:gap-4">
             <img
               src="https://www.sportzinteractive.net/static-assets/images/si-logo.svg?v=2.2"
               alt="SI Logo"
-              className="h-11 w-auto shrink-0 object-contain md:h-12"
+              className="h-9 w-auto shrink-0 object-contain md:h-11"
             />
             <div className="min-w-0">
-              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-brand-blue">
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-blue md:text-[11px]">
                 Strategic Delivery Command
               </p>
-              <h1 className="mt-1 text-balance text-2xl font-extrabold tracking-tight text-slate-900 md:text-3xl">
+              <h1 className="mt-0.5 text-balance text-lg font-extrabold tracking-tight text-slate-900 md:text-2xl">
                 Executive pitch report
               </h1>
-              <p className="mt-1.5 max-w-xl text-sm leading-relaxed text-slate-600">
+              <p className="mt-1 hidden max-w-xl text-xs leading-relaxed text-slate-600 md:block md:text-sm">
                 Live KPIs by business unit, portfolio drilldown, and export-ready
                 monthly data.
               </p>
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-2.5 md:justify-end md:gap-3">
-            <div className="flex items-center gap-2 rounded-2xl border border-slate-200/90 bg-white px-3.5 py-2.5 shadow-sm">
-              <Calendar size={17} className="shrink-0 text-brand-blue" />
+          <div className="flex flex-wrap items-center gap-2 md:justify-end md:gap-2.5">
+            <div className="flex items-center gap-2 rounded-xl border border-slate-200/90 bg-white px-3 py-2 shadow-sm">
+              <Calendar size={16} className="shrink-0 text-brand-blue" />
               <select
                 value={selectedQuarter}
                 onChange={(e) => setSelectedQuarter(e.target.value)}
-                className="max-w-[200px] cursor-pointer bg-transparent text-sm font-semibold text-slate-800 outline-none"
+                className="max-w-[190px] cursor-pointer bg-transparent text-sm font-semibold text-slate-800 outline-none"
               >
                 {MONTHS.map((m) => (
                   <option key={m} value={m}>
@@ -648,8 +671,8 @@ export default function App() {
               </select>
             </div>
             {!selectedMonthHasData && (
-              <label className="inline-flex cursor-pointer items-center gap-2 rounded-md bg-brand-red px-5 py-2.5 text-sm font-semibold text-white shadow-brand-red transition hover:bg-brand-red-dark">
-                <UploadCloud size={18} />
+              <label className="inline-flex cursor-pointer items-center gap-2 rounded-md bg-brand-red px-4 py-2 text-sm font-semibold text-white shadow-brand-red transition hover:bg-brand-red-dark md:px-5 md:py-2.5">
+                <UploadCloud size={17} />
                 {isUploading ? "Syncing..." : "Upload month CSV"}
                 <input
                   type="file"
@@ -662,23 +685,50 @@ export default function App() {
             <button
               type="button"
               onClick={handleDownloadYearlyCsv}
-              className="inline-flex items-center gap-2 rounded-md bg-brand-blue px-4 py-2.5 text-sm font-semibold text-white shadow-brand transition hover:bg-brand-blue-dark"
+              className="inline-flex items-center gap-2 rounded-md bg-brand-blue px-3 py-2 text-sm font-semibold text-white shadow-brand transition hover:bg-brand-blue-dark md:px-4 md:py-2.5"
             >
-              <Download size={18} />
+              <Download size={17} />
               Yearly CSV
             </button>
             <button
               type="button"
               onClick={() => setIsAuthorized(false)}
-              className="rounded-md border border-slate-300 bg-slate-100 p-2.5 text-slate-600 shadow-sm transition hover:border-slate-400 hover:text-slate-900"
+              className="rounded-md border border-slate-300 bg-slate-100 p-2 text-slate-600 shadow-sm transition hover:border-slate-400 hover:text-slate-900 md:p-2.5"
               title="Sign out"
             >
-              <LogOut size={20} />
+              <LogOut size={19} />
             </button>
           </div>
-        </header>
+        </div>
+        <nav
+          className="border-t border-slate-200/70 bg-white/45"
+          aria-label="Section navigation"
+        >
+          <div className="mx-auto flex max-w-[1580px] flex-wrap items-center gap-2 px-4 py-2 md:gap-2.5 md:px-8 md:py-2.5">
+            <span className="hidden text-[10px] font-semibold uppercase tracking-wider text-slate-400 sm:inline">
+              Jump to
+            </span>
+            {[
+              { id: "section-reports", label: "Reports" },
+              { id: "section-kpi", label: "KPI matrix" },
+              { id: "section-portfolio", label: "Portfolio" },
+              { id: "section-governance", label: "Governance" },
+            ].map((s) => (
+              <a
+                key={s.id}
+                href={`#${s.id}`}
+                className="shrink-0 rounded-full bg-white/95 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-600 shadow-sm ring-1 ring-slate-200/90 transition hover:text-brand-blue hover:ring-brand-blue/30"
+              >
+                {s.label}
+              </a>
+            ))}
+          </div>
+        </nav>
+      </header>
 
-        <AnalyticsSection
+      <main className="mx-auto max-w-[1580px] space-y-6 px-4 pb-20 pt-5 md:space-y-7 md:px-8 md:pb-16 md:pt-6">
+        <div id="section-reports" className="scroll-mt-36 md:scroll-mt-40">
+          <AnalyticsSection
           months={MONTHS}
           businessUnits={BUSINESS_UNITS}
           metrics={KRA_METRICS.map(({ id, label, suffix }) => ({
@@ -691,24 +741,21 @@ export default function App() {
           selectedQuarter={selectedQuarter}
           currentClients={currentClients}
         />
+        </div>
 
-        <div className="relative py-2 md:py-4">
-          <div
-            className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-gradient-to-r from-transparent via-slate-300/90 to-transparent"
-            aria-hidden
-          />
-          <div className="relative flex flex-col items-center gap-2 text-center">
-            <span className="rounded-full border border-slate-200/90 bg-[#eef0f4]/95 px-5 py-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500 shadow-sm backdrop-blur-sm">
-              KPI tables &amp; portfolio
-            </span>
-            <p className="max-w-lg text-sm text-slate-500">
-              Month-over-month averages and editable client rows by business unit
-            </p>
-          </div>
+        <div className="flex items-center gap-3 py-1 md:py-2" aria-hidden>
+          <div className="h-px flex-1 bg-gradient-to-r from-transparent via-slate-300/90 to-transparent" />
+          <span className="shrink-0 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
+            Operational tables
+          </span>
+          <div className="h-px flex-1 bg-gradient-to-r from-transparent via-slate-300/90 to-transparent" />
         </div>
 
         {/* Summary Table */}
-        <section className="overflow-hidden rounded-[1.75rem] border border-slate-800/80 bg-gradient-to-b from-slate-900 via-slate-950 to-slate-950 text-white shadow-premium-lg shadow-slate-900/30">
+        <section
+          id="section-kpi"
+          className="scroll-mt-36 overflow-hidden rounded-[1.75rem] border border-slate-800/80 bg-gradient-to-b from-slate-900 via-slate-950 to-slate-950 text-white shadow-premium-lg shadow-slate-900/30 md:scroll-mt-40"
+        >
           <div className="flex items-center justify-between border-b border-white/[0.08] bg-white/[0.03] px-6 py-5 backdrop-blur-sm">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-blue/15 ring-1 ring-brand-blue/35">
@@ -801,10 +848,13 @@ export default function App() {
         </section>
 
         {/* Portfolio Categorised by BU */}
-        <section className="space-y-6">
-          <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-blue text-white shadow-brand">
+        <section
+          id="section-portfolio"
+          className="scroll-mt-36 space-y-4 md:scroll-mt-40"
+        >
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-blue text-white shadow-brand">
                 <Users size={20} />
               </div>
               <div>
@@ -814,13 +864,35 @@ export default function App() {
                 <p className="text-lg font-bold text-slate-900">
                   By business unit
                 </p>
+                <p className="mt-1 text-sm text-slate-500">
+                  Edit metrics inline; changes sync to Firestore.
+                </p>
               </div>
             </div>
-            <p className="text-sm text-slate-500">
-              Edit metrics inline; changes sync to Firestore.
-            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={expandAllBUs}
+                className="rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:border-brand-blue/40 hover:text-brand-blue"
+              >
+                Expand all
+              </button>
+              <button
+                type="button"
+                onClick={collapseAllBUs}
+                className="rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:border-brand-blue/40 hover:text-brand-blue"
+              >
+                Collapse all
+              </button>
+            </div>
           </div>
 
+          <p className="text-xs text-slate-500">
+            Scroll inside the panel when there are many clients — table headers
+            stay visible per BU.
+          </p>
+
+          <div className="max-h-[min(72vh,820px)] overflow-y-auto overscroll-contain rounded-2xl border border-slate-200/70 bg-slate-50/40 p-2 sm:p-3">
         {BUSINESS_UNITS.map((bu) => {
           const buClients = currentClients.filter((c) =>
             c.activeBUs.includes(bu),
@@ -870,9 +942,9 @@ export default function App() {
 
               {/* Clients Table (Conditional Render) */}
               {isExpanded && (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse">
-                    <thead className="border-b border-slate-100 bg-slate-50/80 text-[9px] font-bold uppercase tracking-widest text-slate-500">
+                <div className="max-h-[min(48vh,440px)] overflow-auto border-t border-slate-100">
+                  <table className="w-full min-w-[640px] border-collapse text-left">
+                    <thead className="sticky top-0 z-10 border-b border-slate-200 bg-slate-50/95 text-[9px] font-bold uppercase tracking-widest text-slate-500 backdrop-blur-sm">
                       <tr>
                         <th className="px-8 py-4 w-64">Client Name</th>
                         {KRA_METRICS.map((m) => (
@@ -944,38 +1016,72 @@ export default function App() {
             </div>
           );
         })}
+          </div>
       </section>
 
-        {/* Governance Protocol */}
-        <footer className="grid grid-cols-1 gap-8 rounded-3xl border border-slate-200/80 bg-white/70 p-8 shadow-premium backdrop-blur-md md:grid-cols-2 md:gap-12">
-          <div>
-            <h3 className="mb-4 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.18em] text-brand-blue">
-              <CheckCircle2 size={16} strokeWidth={2.25} /> Governance — do
-            </h3>
-            <ul className="space-y-3">
-              {GOVERNANCE_RULES.dos.map((rule) => (
-                <li key={rule} className="flex gap-3 text-sm leading-relaxed text-slate-600">
-                  <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-brand-blue" />
-                  {rule}
-                </li>
-              ))}
-            </ul>
+        {/* Governance — collapsible to shorten the page */}
+        <details
+          id="section-governance"
+          className="scroll-mt-36 group rounded-3xl border border-slate-200/80 bg-white/70 shadow-premium backdrop-blur-md open:shadow-premium-lg md:scroll-mt-40"
+          open
+        >
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 marker:content-none md:px-8 md:py-5 [&::-webkit-details-marker]:hidden">
+            <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">
+              Governance protocol
+            </span>
+            <ChevronDown className="h-5 w-5 shrink-0 text-slate-400 transition group-open:rotate-180" />
+          </summary>
+          <div className="border-t border-slate-200/80 px-5 pb-6 pt-2 md:px-8 md:pb-8">
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-2 md:gap-12">
+              <div>
+                <h3 className="mb-4 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.18em] text-brand-blue">
+                  <CheckCircle2 size={16} strokeWidth={2.25} /> Do
+                </h3>
+                <ul className="space-y-3">
+                  {GOVERNANCE_RULES.dos.map((rule) => (
+                    <li
+                      key={rule}
+                      className="flex gap-3 text-sm leading-relaxed text-slate-600"
+                    >
+                      <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-brand-blue" />
+                      {rule}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <h3 className="mb-4 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.18em] text-brand-red">
+                  <AlertTriangle size={16} strokeWidth={2.25} /> Don&apos;t
+                </h3>
+                <ul className="space-y-3">
+                  {GOVERNANCE_RULES.donts.map((rule) => (
+                    <li
+                      key={rule}
+                      className="flex gap-3 text-sm leading-relaxed text-slate-600"
+                    >
+                      <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-brand-red" />
+                      {rule}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
           </div>
-          <div>
-            <h3 className="mb-4 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.18em] text-brand-red">
-              <AlertTriangle size={16} strokeWidth={2.25} /> Governance — don&apos;t
-            </h3>
-            <ul className="space-y-3">
-              {GOVERNANCE_RULES.donts.map((rule) => (
-                <li key={rule} className="flex gap-3 text-sm leading-relaxed text-slate-600">
-                  <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-brand-red" />
-                  {rule}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </footer>
-      </div>
+        </details>
+      </main>
+
+      {showBackToTop && (
+        <button
+          type="button"
+          aria-label="Back to top"
+          onClick={() =>
+            window.scrollTo({ top: 0, behavior: "smooth" })
+          }
+          className="fixed bottom-5 right-4 z-50 flex h-11 w-11 items-center justify-center rounded-full bg-brand-blue text-white shadow-brand transition hover:bg-brand-blue-dark md:bottom-8 md:right-8 md:h-12 md:w-12"
+        >
+          <ArrowUp size={20} strokeWidth={2.25} />
+        </button>
+      )}
     </div>
   );
 }

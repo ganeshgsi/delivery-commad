@@ -164,8 +164,8 @@ export default function AnalyticsSection({
         aria-hidden
       />
 
-      <div className="relative rounded-[2rem] bg-white/80 p-6 backdrop-blur-xl md:p-8 lg:p-10">
-        <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
+      <div className="relative rounded-[2rem] bg-white/80 p-5 backdrop-blur-xl md:p-7 lg:p-8">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
           <div className="max-w-2xl space-y-3">
             <div className="inline-flex items-center gap-2 rounded-full border border-brand-blue/25 bg-brand-blue/5 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-brand-blue">
               <Sparkles size={14} className="text-brand-blue" />
@@ -209,7 +209,7 @@ export default function AnalyticsSection({
           </div>
         </div>
 
-        <div className="mt-10 grid grid-cols-1 gap-6 xl:grid-cols-3">
+        <div className="mt-7 grid grid-cols-1 gap-5 md:mt-8 md:gap-6 xl:grid-cols-3">
           <div className="min-w-0 xl:col-span-2">
             <div className="flex min-h-0 flex-col rounded-2xl border border-slate-200/80 bg-gradient-to-b from-slate-50/90 to-white p-5 shadow-insetSoft md:p-6">
               <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
@@ -443,7 +443,7 @@ export default function AnalyticsSection({
           </div>
         </div>
 
-        <div className="mt-6 rounded-2xl border border-slate-200/80 bg-gradient-to-b from-slate-50/90 to-white p-5 shadow-insetSoft md:p-6">
+        <div className="mt-5 rounded-2xl border border-slate-200/80 bg-gradient-to-b from-slate-50/90 to-white p-5 shadow-insetSoft md:mt-6 md:p-6">
           <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
             <div>
               <h3 className="text-sm font-bold text-slate-900">
